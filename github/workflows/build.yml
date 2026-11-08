@@ -9,7 +9,12 @@ jobs:
 
       - name: Unzip project
         run: |
-          find . -maxdepth 1 -name "*.zip" -exec unzip {} \;
+          echo "Текущие файлы в корне:"
+          ls -la
+          echo "Распаковываем архив..."
+          # Явно указываем имя файла (проверь, чтобы оно совпадало с тем, что на GitHub)
+          unzip -o "Android-Im6gui-Template-0.1.0.zip" -d .
+          echo "После распаковки:"
           ls -la
 
       - name: Set up JDK 21
@@ -27,13 +32,16 @@ jobs:
 
       - name: Build with Gradle
         run: |
-          # Ищем папку, где лежит gradlew, и заходим туда
+          # Ищем папку, где лежит gradlew
           GRADLEW_PATH=$(find . -name "gradlew" -type f | head -n 1)
+          echo "Найден gradlew по пути: $GRADLEW_PATH"
           if [ -z "$GRADLEW_PATH" ]; then
             echo "gradlew не найден!"
             exit 1
           fi
           cd $(dirname "$GRADLEW_PATH")
+          echo "Перешли в папку: $(pwd)"
+          ls -la
           chmod +x gradlew
           ./gradlew assembleDebug
         env:
