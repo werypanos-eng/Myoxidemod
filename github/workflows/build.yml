@@ -1,0 +1,49 @@
+name: Build APK
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Unzip project
+        run: |
+          # Ищем любой ZIP-архив в корне и распаковываем его
+          find . -maxdepth 1 -name "*.zip" -exec unzip {} \;
+          ls -la
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r28c
+          add-to-path: true
+
+      - name: Build with Gradle
+        run: |
+          # Заходим в распакованную папку (или остаемся в корне, если распаковалось сразу сюда)
+          if [ -d "Android-Im6gui-Template-0.1.0" ]; then cd Android-Im6gui-Template-0.1.0; fi
+          if [ -d "app" ]; then
+            chmod +x gradlew
+            ./gradlew assembleDebug
+          else
+            echo "Папка app не найдена!"
+            exit 1
+          fi
+        env:
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ModMenu-Debug
+          path: '**/app/build/outputs/apk/debug/*.apk'
